@@ -1,0 +1,3 @@
+const AVATAR_STYLES = ["adventurer", "adventurerNeutral", "avataaars", "avataaarsNeutral", "bigEars", "bigEarsNeutral", "bigSmile", "bottts", "botttsNeutral", "croodles", "croodlesNeutral", "dylan", "funEmoji", "glass", "icons", "identicon", "lorelei", "loreleiNeutral", "micah", "miniavs", "notionists", "notionistsNeutral", "openPeeps", "personas", "pixelArt", "pixelArtNeutral", "rings", "shapes", "thumbs" ];
+
+module.exports = AVATAR_STYLES;

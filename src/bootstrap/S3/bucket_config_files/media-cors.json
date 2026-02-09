@@ -1,0 +1,11 @@
+{
+    "CORSRules": [
+        {
+            "AllowedOrigins": ["https://wyspar.com", "http://localhost:3000", "http://10.111.4.66:3000"],
+            "AllowedMethods": ["GET"],
+            "AllowedHeaders": ["*"],
+            "ExposeHeaders": ["ETag", "Content-Length"],
+            "MaxAgeSeconds": 3600
+        }
+    ]
+}  

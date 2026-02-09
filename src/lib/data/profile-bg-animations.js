@@ -1,0 +1,1 @@
+export const PROFILE_BACKGROUND_ANIMATIONS = ["particleNetwork", "starryNight", "floatingBubbles", "geometricShapes", "matrixRain", "fireflies", "autumnLeaves", "snowFall", "quantumField", "electricStorm", "cosmicDust"];
