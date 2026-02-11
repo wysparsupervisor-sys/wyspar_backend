@@ -52,7 +52,7 @@ const VerifyUserSubscription = async (req, res) => {
 
         TrackEvent('User Subscribed', {
             distinct_id: user_id,
-            time: new Date().toISOString(),
+            time: Date.now(),
         });
         
         MailTransporter.sendMail({

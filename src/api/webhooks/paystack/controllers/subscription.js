@@ -43,7 +43,7 @@ router.post("/subscription", express.raw({ type:"application/json" }), async (re
 
                 TrackEvent('User Subscribed', {
                     distinct_id: metadata.user_id,
-                    time: new Date().toISOString(),
+                    time: Date.now(),
                 });
 
                 //send coonfirmation mail to user finally

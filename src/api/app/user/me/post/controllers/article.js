@@ -59,15 +59,12 @@ async function HandleArticleWithoutImage(req, res){
 
         TrackEvent('Post Created', {
             distinct_id: user_id,
-            time: new Date().toISOString(),
+            time: Date.now(),
         });
     } catch (err) {
         await client.query("ROLLBACK");
         console.log(err);
         res.status(400).json({ok: false, msg: "Something went wrong. Try again!"});
-        TrackEvent('Post Created', {
-            distinct_id: user_id,
-        });
     } finally {
         client.release();
     };
@@ -147,7 +144,7 @@ async function HandleArticleWithImage(req, res) {
             res.status(200).json({ok: true, msg: "Success", post_info: result.rows[0]});
             TrackEvent('Post Created', {
                 distinct_id: user_id,
-                time: new Date().toISOString(),
+                time: Date.now(),
             });
         } catch (err) {
             await client.query("ROLLBACK")

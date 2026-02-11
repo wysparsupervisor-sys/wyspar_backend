@@ -5,7 +5,7 @@ const DAU = async (req, res) => {
 
     TrackEvent("App Opened", {
         distinct_id: user_id,
-        time: new Date().toISOString(),
+        time: Date.now(),
     });
 
     res.status(200).json({ok: true});

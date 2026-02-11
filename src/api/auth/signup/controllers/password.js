@@ -53,7 +53,7 @@ const ProcessPassword = async (req, res) => {
 
         //mixpanel analytics
         mixpanel.people.set(result.rows[0].user_id, {
-            '$created': new Date().toISOString()
+            '$created': Date.now(),
         });
 
         TrackEvent("User Signed Up", {
