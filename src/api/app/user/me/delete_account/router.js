@@ -1,4 +1,4 @@
-const { TrackEvent } = require("../../../../../config/mixpanel");
+const { TrackEvent, mixpanel } = require("../../../../../config/mixpanel");
 const pool = require("../../../../../config/pg");
 const SetCookie = require("../../../../../lib/utils/cookie-setter");
 const router = require("express").Router();
@@ -14,8 +14,12 @@ router.get("/", async (req, res) => {
         SetCookie(res, "user_refresh_token", "", 0);
 
         res.status(200).json({ok: true});
+
+        mixpanel.people.set(user_id, {
+            deleted: true,
+        });
         TrackEvent("Deleted Account", {
-            distinct_id: user_id
+            distinct_id: user_id,
         });
     } catch (err) {
         console.log(err);

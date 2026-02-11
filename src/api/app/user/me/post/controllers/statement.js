@@ -39,6 +39,7 @@ const ProcessStatementPost = async (req, res) => {
         res.status(200).json({ok: true, msg: "success", post_info: result.rows[0]});
         TrackEvent('Post Created', {
             distinct_id: user_id,
+            time: new Date().toISOString(),
         });
     } catch (err) {
         await client.query("ROLLBACK")

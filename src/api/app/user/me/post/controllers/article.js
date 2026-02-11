@@ -56,8 +56,10 @@ async function HandleArticleWithoutImage(req, res){
         await client.query("COMMIT");
 
         res.status(200).json({ok: true, msg: "Success", post_info: result.rows[0]});
+
         TrackEvent('Post Created', {
             distinct_id: user_id,
+            time: new Date().toISOString(),
         });
     } catch (err) {
         await client.query("ROLLBACK");
@@ -90,10 +92,9 @@ async function HandleArticleWithImage(req, res) {
                 Bucket: bucket,
                 Key: key,
                 ContentType: "image/webp",
-                ACL: "public-read"
             });
 
-            const uploadUrl = await getSignedUrl(S3, command, { expiresIn: 2 * 60 });
+            const uploadUrl = await getSignedUrl(S3, command, { expiresIn: 5 * 60 });
             await redisClient.set(`POST:S3KEYS:${user_id}`, JSON.stringify([key]), { EX: 5 * 60 });
 
             return res.status(200).json({ok: true, url: uploadUrl});
@@ -146,6 +147,7 @@ async function HandleArticleWithImage(req, res) {
             res.status(200).json({ok: true, msg: "Success", post_info: result.rows[0]});
             TrackEvent('Post Created', {
                 distinct_id: user_id,
+                time: new Date().toISOString(),
             });
         } catch (err) {
             await client.query("ROLLBACK")

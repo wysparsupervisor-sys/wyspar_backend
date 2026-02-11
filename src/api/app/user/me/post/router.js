@@ -1,7 +1,6 @@
 const { body } = require("express-validator");
 const ProcessArticlePost = require("./controllers/article");
 const ProcessStatementPost = require("./controllers/statement");
-const schools = require("../../../../../lib/data/schools");
 const POST_TYPES = require("../../../../../lib/data/post-types");
 const POST_CATEGORIES = require("../../../../../lib/data/post-categories");
 const GetLocationClass = require("../../../../../lib/utils/location-status");
@@ -20,15 +19,15 @@ router.post("/", async (req, res) => {
     await body("type").exists().isString().isIn(POST_TYPES).withMessage("").run(req);
     await body("category").exists().isString().isIn(POST_CATEGORIES).withMessage("").run(req);
     if(req.body.coords) {
-        await body("coords.school").exists().isString().isIn(schools).withMessage("").run(req);
-        await body("coords.lat").exists().isNumeric().withMessage("").run(req);
-        await body("coords.long").exists().isNumeric().withMessage("").run(req);
-        await body("coords.accuracy").exists().isNumeric().withMessage("").run(req);
+        await body("coords.lat").exists().withMessage("").run(req);
+        await body("coords.long").exists().withMessage("").run(req);
+        await body("coords.accuracy").exists().withMessage("").run(req);
 
-        const { lat, long, accuracy, school } = req.body.coordss;
+        const { lat, long, accuracy } = req.body.coords;
+        const { school } = req.user;
         req.user.location_status = GetLocationClass(parseFloat(lat), parseFloat(long), parseFloat(accuracy), school);
     } else {
-        //if no coords set as unrliabl
+        //if no coords set as unrliable
         req.user.location_status = "unreliable";
     }; 
 

@@ -9,7 +9,6 @@ const AppTokenAuthentication = async (req, res, next) => {
     const user_refresh_token = req.cookies["user_refresh_token"];
  
     if(!user_access_token) {
-        SetCookie(res, "user_access_token", "", 0);
         SetCookie(res, "user_refresh_token", "", 0);
         return res.status(401).json({ok: false, msg: "Authentication Failed1"});
     };

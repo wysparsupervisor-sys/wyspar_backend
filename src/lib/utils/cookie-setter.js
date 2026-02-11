@@ -9,7 +9,7 @@ const SetCookie = async (res, name, value, maxAge, options = {}) => {
         path: "/",
         secure: isProduction,
         maxAge: maxAge,
-        domain: isProduction ? ".wispr.com" : undefined,
+        domain: isProduction ? ".wyspar.com" : undefined,
     };
 
     const cookieOptions = { ...defaults, ...options };

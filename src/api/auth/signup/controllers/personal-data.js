@@ -27,14 +27,14 @@ const ProcessPersonalData =  async (req, res) => {
         const errors = validationResult(req);
         if(!errors.isEmpty()) return res.status(400).json({ok: false, msg: errors.array({ onlyFirstError: true })[0].msg});
 
-        if (body.anonymous_name.toLowerCase() === "wyspar") return res.status(400).json({ok: false, msg: "Cannot use name"});
+        if (req.body.anonymous_name.toLowerCase() === "wyspar") return res.status(400).json({ok: false, msg: "Cannot use name"});
 
 
         //proceed with app logic
         let signup_data = req.body;
 
         //check if anonymous_name or email has been taken on DB
-        const check_result = await pool.query(`SELECT CASE WHEN LOWER(anonymous_name) = $2 THEN 'anonymous_name_taken' WHEN email = $1 THEN 'email_taken' END AS conflict FROM users WHERE email = $1 OR anonymous_name = $2`, [signup_data.email, signup_data.anonymous_name.toLowerCase()]);
+        const check_result = await pool.query(`SELECT CASE WHEN LOWER(anonymous_name) = LOWER($2) THEN 'anonymous_name_taken' WHEN email = $1 THEN 'email_taken' END AS conflict FROM users WHERE email = $1 OR anonymous_name = $2`, [signup_data.email, signup_data.anonymous_name.toLowerCase()]);
         const conflicts = check_result.rows.map(row => row.conflict);
         const taken = conflicts.filter(Boolean);
         if (taken.includes("anonymous_name_taken")) return res.status(200).json({ok: false, msg:"Anonymous name has been taken!"});

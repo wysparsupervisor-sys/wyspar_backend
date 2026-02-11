@@ -1,5 +1,7 @@
 const Mixpanel = require("mixpanel");
-const mixpanel = Mixpanel.init(process.env.MIXPANEL_TOKEN);
+const mixpanel = Mixpanel.init(process.env.MIXPANEL_TOKEN, { 
+    host: "api-eu.mixpanel.com",
+});
 
 
 const TrackEvent = (event_name, props = { }) => {
@@ -12,5 +14,4 @@ const TrackEvent = (event_name, props = { }) => {
     };
 };
 
-
-module.exports = { TrackEvent };
+module.exports = { TrackEvent, mixpanel };
