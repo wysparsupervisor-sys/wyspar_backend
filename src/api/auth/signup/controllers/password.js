@@ -5,7 +5,7 @@ const { PRIVATE_KEY } = require("../../../../../secrets");
 const redisClient = require("../../../../config/redis");
 const pool = require("../../../../config/pg");
 const SetCookie = require("../../../../lib/utils/cookie-setter");
-const { TrackEvent, mixpanel } = require("../../../../config/mixpanel");
+const { TrackEvent } = require("../../../../config/mixpanel");
 
 
 //needs work still. Not perfectly secured
@@ -50,11 +50,6 @@ const ProcessPassword = async (req, res) => {
         SetCookie(res, "user_refresh_token", token2, 1000 * 60 * 60 * 24 * 30);
         
         res.status(200).json({ok: true, msg: "Signup successful!"});
-
-        //mixpanel analytics
-        mixpanel.people.set(result.rows[0].user_id, {
-            '$created': Date.now(),
-        });
 
         TrackEvent("User Signed Up", {
             distinct_id: result.rows[0].user_id,
