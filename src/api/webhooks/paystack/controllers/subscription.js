@@ -48,7 +48,7 @@ router.post("/subscription", express.raw({ type:"application/json" }), async (re
 
                 //send coonfirmation mail to user finally
                 MailTransporter.sendMail({
-                    from: process.env.EMAIL_USER,
+                    from: '"Wyspar Subscriptions" <app@wyspar.com>',
                     to: metadata.email, 
                     subject: `Thank you for subscribing!`,
                     html: `

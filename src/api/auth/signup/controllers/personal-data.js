@@ -54,7 +54,7 @@ const ProcessPersonalData =  async (req, res) => {
 
          //send email to user
         return MailTransporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: '"Wyspar Team" <app@wyspar.com>',
             to: signup_data.email,
             subject: `Welcome to ${APP_NAME}!`,
             html: `

@@ -56,7 +56,7 @@ const VerifyUserSubscription = async (req, res) => {
         });
         
         MailTransporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: '"Wyspar Subscriptions" <app@wyspar.com>',
             to: verifation_res.metadata.email, 
             subject: `Thank you for subscribing!`, 
             html: `

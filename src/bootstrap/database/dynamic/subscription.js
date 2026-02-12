@@ -4,7 +4,7 @@ const CreateSubscriptionTable = async () => {
     const query = `
         CREATE TABLE IF NOT EXISTS subscription (
             user_id UUID NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
-            expiry TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '10  days',
+            expiry TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '20 days',
             last_payment_ref TEXT,
             last_access_code TEXT,
             is_processing BOOLEAN NOT NULL DEFAULT FALSE,

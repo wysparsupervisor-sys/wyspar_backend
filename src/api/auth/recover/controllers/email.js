@@ -44,7 +44,7 @@ const ProcessRecoveryEmail = async (req, res) => {
 
         //send email to client
         return MailTransporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: '"Wyspar Security" <app@wyspar.com>',
             to: email,
             subject: `${APP_NAME} noticed you forgot your password!`,
             html: `
