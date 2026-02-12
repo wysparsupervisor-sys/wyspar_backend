@@ -53,7 +53,7 @@ const ProcessPassword = async (req, res) => {
 
         TrackEvent("User Signed Up", {
             distinct_id: result.rows[0].user_id,
-            anonymous_name: result.rows[0].anonymous_name
+            name: result.rows[0].anonymous_name
         });
     } catch (err) {
         await client.query("ROLLBACK")
