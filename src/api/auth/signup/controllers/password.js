@@ -33,7 +33,7 @@ const ProcessPassword = async (req, res) => {
 
         //store user data on DB
         await client.query("BEGIN");
-        const db_query = `INSERT INTO users (email, password, school, anonymous_name, gender, details) VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id, school`;
+        const db_query = `INSERT INTO users (email, password, school, anonymous_name, gender, details) VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id, school, anonymous_name`;
         const result = await client.query(db_query, [signup_data.email, signup_data.password, signup_data.school[0].value, signup_data.anonymous_name, signup_data.gender, details]);
         await redisClient.del([`SIGNUP:SESSIONID:${sessionID}`]);
 
@@ -53,6 +53,7 @@ const ProcessPassword = async (req, res) => {
 
         TrackEvent("User Signed Up", {
             distinct_id: result.rows[0].user_id,
+            anonymous_name: result.rows[0].anonymous_name
         });
     } catch (err) {
         await client.query("ROLLBACK")
