@@ -1,4 +1,4 @@
-const HOST = "10.77.42.66";  //reasons explained in an equivalent file on frontend folder
+const HOST = "localhost";  //reasons explained in an equivalent file on frontend folder
 const isProduction = process.env.NODE_ENV === "production";
 
 const FRONTEND_URL = isProduction ? "https://www.wyspar.com" : `http://${HOST}:3000`;

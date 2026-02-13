@@ -1,5 +1,10 @@
 const { body, validationResult, query } = require("express-validator");
 const pool = require("../../../../../config/pg");
+const redisClient = require("../../../../../config/redis");
+const webpush = require("web-push");
+const { UUIDToBase62 } = require("../../../../../lib/utils/base-converter");
+
+//configure vapid keys
 
 const ProcessComment = async (req, res) => {
     const is_subscribed = req.subscription.is_subscribed;
@@ -45,7 +50,50 @@ const ProcessComment = async (req, res) => {
 
     try {
         const result = await pool.query(query_db, [comment, post_id, user_id]);
-        return res.status(200).json({ok: true, msg: "success", body: result.rows[0]});
+        res.status(200).json({ok: true, msg: "success", body: result.rows[0]});
+
+        //handle push notification after response
+        try {
+            //fetch post owner
+            const post_res = await pool.query(`SELECT user_id FROM posts WHERE post_id = $1`, [post_id]);
+            const poster_id = post_res.rows[0].user_id
+            if(poster_id === user_id) return; //if poster posted the comment do nothing
+
+            //check if poster has reached the limit
+            if(!(await canSendPush(post_id))) return;
+
+            //passes everything then get data for push
+            const sub_res = await pool.query(`SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1`, [poster_id]);
+            if (sub_res.rows.length === 0) return;
+
+            for (let i = 0; i < Math.min(sub_res.rows.length, 2); i++) {
+                const row = sub_res.rows[i];
+                try {
+                    await webpush.sendNotification(
+                        {
+                            endpoint: row.endpoint,
+                            keys: {
+                                p256dh: row.p256dh,
+                                auth: row.auth,
+                            },
+                        },
+                        JSON.stringify({
+                            title: "New comment on your whisper!",
+                            body: comment.slice(0, 50),
+                            icon: "https://www.wyspar.com/icon.png",
+                            url: `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`,
+                            image: "https://www.wyspar.com/push.png",
+                            actions: [{ action: "view", title: "View Comment" }, { action: "reply", title: "Reply" }],
+                        }),
+                    );
+                } catch (err) {
+                    console.error("Push error, removing subscription", row.endpoint);
+                    return await pool.query(`DELETE FROM push_subscriptions WHERE endpoint = $1`, [row.endpoint])
+                };
+            };
+        } catch (err) {
+            console.log("Error with push notification");
+        };
     } catch (err) {
         console.log(err);
         return res.status(400).json({ok: false, msg: "Something went wrong. Try again!"});
@@ -54,3 +102,17 @@ const ProcessComment = async (req, res) => {
 
 
 module.exports = ProcessComment;
+
+
+
+async function canSendPush(user_id){
+    const key = `USER:${user_id}:PUSH_LIMIT`;
+    const count = await redisClient.incr(key);
+
+    if (count === 1) {
+        //fisrt notificatiion
+        await redisClient.expire(key, 24 * 60 * 60);
+    };
+
+    return count <= 10;
+};

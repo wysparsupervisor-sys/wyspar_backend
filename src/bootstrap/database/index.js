@@ -8,6 +8,7 @@ const AddUUIDOSSPExtension = require("./extensions/uuid");
 const AddVectorExtension = require("./extensions/vector");
 const CreateSubscriptionTable = require("./dynamic/subscription");
 const CreateFeedbackTable = require("./dynamic/feedback");
+const CreatePushSubscriptionTable = require("./dynamic/push_subscriptions");
 
 
 const ConfigureRelationalDB =  async () => {
@@ -23,6 +24,7 @@ const ConfigureRelationalDB =  async () => {
         await CreateLovesTable();
         await CreateCommentsTable();
         await CreateFeedbackTable();
+        await CreatePushSubscriptionTable();
     } catch (err) {
         return;
     };

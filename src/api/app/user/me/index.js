@@ -11,5 +11,6 @@ router.use("/feedback", require("./feedback/router"));
 router.use("/logout", require("./logout/router"));
 router.use("/deleteaccount", require("./delete_account/router"));
 router.use("/analytics", require("./analytics/router"));
+router.use("/push-subscription", require("./push_subscription/router"));
 
 module.exports = router;

@@ -6,11 +6,14 @@ const cookieParser = require("cookie-parser");
 const Bootstrap = require("./src/bootstrap");
 const AppTokenAuthentication = require("./src/lib/middleware/token-auth");
 const SubscriptionAuth = require("./src/lib/middleware/subscription-auth");
+const webpush = require("web-push");
 
 
     (async () => {
         try {
             await Bootstrap();
+            //set vapid details
+            webpush.setVapidDetails("mailto:wysparsupervisor@gmail.com", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
         } catch (err) {
             return;
         };
