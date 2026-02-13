@@ -6,6 +6,9 @@ const redisClient = require("../../../../config/redis");
 const pool = require("../../../../config/pg");
 const SetCookie = require("../../../../lib/utils/cookie-setter");
 const { TrackEvent } = require("../../../../config/mixpanel");
+const { embed } = require("../../../../config/embedder");
+const POST_STYLES = require("../../../../lib/data/post-styles");
+const AUTO_POSTS = require("../../../../lib/data/auto-posts");
 
 
 //needs work still. Not perfectly secured
@@ -39,8 +42,25 @@ const ProcessPassword = async (req, res) => {
 
         //created user subscription table
         await client.query(`INSERT INTO subscription (user_id) VALUES ($1)`, [result.rows[0].user_id]);
-        await client.query("COMMIT");
 
+
+        //create automatic first  post for user
+        const post_query = `INSERT INTO posts (user_id, content, post_type, post_style, post_category, location_status, embedding) VALUES ($1, $2, $3, $4, $5, $6, $7::vector)`;
+        const increment_query = `UPDATE users SET stats = jsonb_set(stats, '{posts}', ((stats->>'posts')::int + 1)::text::jsonb) WHERE user_id = $1`;
+
+        const auto_content  = result.rows[0].anonymous_name + " says: " + AUTO_POSTS[Math.floor(Math.random() * AUTO_POSTS.length)];
+        const auto_vector = '['+ (await embed(auto_content)).join(',') + ']';
+        const auto_location_status = 0;
+        const auto_post_type = 1;
+        const auto_post_category = 7;
+        const auto_post_style = Math.floor(Math.random() * POST_STYLES.length);
+
+        //add to db
+        await client.query(post_query, [result.rows[0].user_id, auto_content, auto_post_type, auto_post_style, auto_post_category, auto_location_status, auto_vector]);
+        await client.query(increment_query, [result.rows[0].user_id]);
+
+        await client.query("COMMIT");
+        
         //issue access token
         const token = jwt.sign({user_id: result.rows[0].user_id, school: result.rows[0].school}, PRIVATE_KEY, { algorithm: "RS256", expiresIn: "15m"});
         SetCookie(res, "user_access_token", token,  1000 * 60 * 60 * 24 * 365);
