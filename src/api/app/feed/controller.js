@@ -26,10 +26,10 @@ const ProcessFeed = async (req, res) => {
 
     try {
         recent = await getCachedFeeds("recent", post_category, school); //2 drom here
-        trending = await getCachedFeeds("trending", post_category, school); //3 from here
+        trending = await getCachedFeeds("recent", post_category, school); //3 from here
         popular = await getCachedFeeds("popular", post_category, school); //3 from here
-        old = await getCachedFeeds("old", post_category, school);//1 from here
-        chaos = await getCachedFeeds("chaos", post_category, school);//1 from here totalling 10
+        old = await getCachedFeeds("recent", post_category, school);//1 from here
+        chaos = await getCachedFeeds("recent", post_category, school);//1 from here totalling 10
 
         //combine based on ratios
         const joined_feed = [...recent, ...trending, ...popular, ...old, ...chaos];
