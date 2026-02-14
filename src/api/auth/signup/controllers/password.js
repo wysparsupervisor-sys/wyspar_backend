@@ -9,6 +9,7 @@ const { TrackEvent } = require("../../../../config/mixpanel");
 const { embed } = require("../../../../config/embedder");
 const POST_STYLES = require("../../../../lib/data/post-styles");
 const AUTO_POSTS = require("../../../../lib/data/auto-posts");
+const POST_CATEGORIES = require("../../../../lib/data/post-categories");
 
 
 //needs work still. Not perfectly secured
@@ -52,7 +53,7 @@ const ProcessPassword = async (req, res) => {
         const auto_vector = '['+ (await embed(auto_content)).join(',') + ']';
         const auto_location_status = 0;
         const auto_post_type = 1;
-        const auto_post_category = 7;
+        const auto_post_category = Math.floor(Math.random() * POST_CATEGORIES.length);
         const auto_post_style = Math.floor(Math.random() * POST_STYLES.length);
 
         //add to db

@@ -66,7 +66,7 @@ module.exports = ProcessFeed;
 
 async function getCachedFeeds(feed_cat, post_category="*", school="*", count = 2){
     try {
-        const key = `feed:${feed_cat}:${school === "*" ? schools[Math.floor(Math.random() * schools.length)]:school}:${post_category === "*" ? Math.floor(Math.random() * POST_CATEGORIES.length):post_category}`;
+        const key = `feed:${feed_cat}:${school === "*" ? schools[Math.floor(Math.random() * schools.length)].value:school}:${post_category === "*" ? Math.floor(Math.random() * POST_CATEGORIES.length):post_category}`;
  
         const items = await redisClient.zRandMemberCount(key, count);
 
