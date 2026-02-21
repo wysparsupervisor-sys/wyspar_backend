@@ -3,6 +3,7 @@ const pool = require("../../../../../config/pg");
 const redisClient = require("../../../../../config/redis");
 const webpush = require("web-push");
 const { UUIDToBase62 } = require("../../../../../lib/utils/base-converter");
+const { TrackEvent } = require("../../../../../config/mixpanel");
 
 //configure vapid keys
 
@@ -11,7 +12,7 @@ const ProcessComment = async (req, res) => {
     if (!is_subscribed) return res.status(200).json({ok: false});
 
     //validate comment
-    await body("comment").exists().isString().isLength({min: 2, max: 500}).withMessage("Invalid request body").run(req);
+    await body("comment").exists().isString().trim().isLength({min: 2, max: 500}).withMessage("Invalid request body").run(req);
     await body("post_id").exists().isString().isUUID().withMessage("Invalid request body").run(req);
     await query("withProfileData").exists().isIn(["true","false"]).withMessage("Invalid request paramseter").run(req);
 
@@ -51,6 +52,17 @@ const ProcessComment = async (req, res) => {
     try {
         const result = await pool.query(query_db, [comment, post_id, user_id]);
         res.status(200).json({ok: true, msg: "success", body: result.rows[0]});
+        
+        //tell mixpanle that someone commented
+        TrackEvent('Comment Created', {
+            distinct_id: user_id,
+            commented_on: post_id,
+            time: Date.now(),
+        });
+
+        //handle mention if any
+        const mentionMatch = comment.match(/@\S+/);
+        if(mentionMatch) await HandleMention(mentionMatch[0].slice(1), post_id, user_id);
 
         //handle push notification after response
         try {
@@ -60,7 +72,7 @@ const ProcessComment = async (req, res) => {
             if(poster_id === user_id) return; //if poster posted the comment do nothing
 
             //check if poster has reached the limit
-            if(!(await canSendPush(post_id))) return;
+            if(!(await canSendPush(poster_id))) return;
 
             //passes everything then get data for push
             const sub_res = await pool.query(`SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1`, [poster_id]);
@@ -79,7 +91,7 @@ const ProcessComment = async (req, res) => {
                         },
                         JSON.stringify({
                             title: "New comment on your whisper!",
-                            body: comment.slice(0, 50),
+                            body: `${comment.slice(0, 50)}...open app`,
                             icon: "https://www.wyspar.com/icon.png",
                             url: `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`,
                             image: "https://www.wyspar.com/push.png",
@@ -114,5 +126,48 @@ async function canSendPush(user_id){
         await redisClient.expire(key, 24 * 60 * 60);
     };
 
-    return count <= 10;
+    return count <= 20;
+};
+
+
+async function HandleMention(anonymous_name, post_id, user_id) {
+    try {
+        const result = await pool.query(
+            `SELECT ps.endpoint, ps.p256dh, ps.auth, ps.user_id AS mentionee
+            FROM users u
+            JOIN comments c ON c.user_id = u.user_id AND c.post_id = $2
+            JOIN posts p ON p.post_id = c.post_id
+            JOIN push_subscriptions ps ON ps.user_id = u.user_id
+            WHERE LOWER(u.anonymous_name) = LOWER($1)
+                AND u.user_id != p.user_id
+                AND u.user_id != $3
+                LIMIT 1`
+        , [anonymous_name, post_id, user_id]);
+
+        if(!result.rows[0]) return;
+
+        const { mentionee, endpoint, p256dh, auth} = result.rows[0];
+        //else send notification to mentioned users
+        if(!canSendPush(mentionee)) return;
+
+        await webpush.sendNotification(
+            {
+                endpoint: endpoint,
+                keys: {
+                    p256dh: p256dh,
+                    auth: auth,
+                },
+            },
+            JSON.stringify({
+                title: "Someone replied your comment!",
+                body: "Check out what has been said about your comment on a post",
+                icon: "https://www.wyspar.com/icon.png",
+                url: `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`,
+                actions: [{ action: "view", title: "View It" }],
+            }),
+        );
+    } catch (err) {
+        console.log(err);
+        return;
+    };
 };
