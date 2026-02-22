@@ -62,7 +62,7 @@ const ProcessComment = async (req, res) => {
 
         //handle mention if any
         const mentionMatch = comment.match(/@\S+/);
-        if(mentionMatch) await HandleMention(mentionMatch[0].slice(1), post_id, user_id);
+        if(mentionMatch) await HandleMention(mentionMatch[0].slice(1), post_id, user_id, comment);
 
         //handle push notification after response
         try {
@@ -130,7 +130,7 @@ async function canSendPush(user_id){
 };
 
 
-async function HandleMention(anonymous_name, post_id, user_id) {
+async function HandleMention(anonymous_name, post_id, user_id, comment) {
     try {
         const result = await pool.query(
             `SELECT ps.endpoint, ps.p256dh, ps.auth, ps.user_id AS mentionee
@@ -160,7 +160,7 @@ async function HandleMention(anonymous_name, post_id, user_id) {
             },
             JSON.stringify({
                 title: "Someone replied your comment!",
-                body: "Check out what has been said about your comment on a post",
+                body: `${comment.slice(0,30)}...open app`,
                 icon: "https://www.wyspar.com/icon.png",
                 url: `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`,
                 actions: [{ action: "view", title: "View It" }],
