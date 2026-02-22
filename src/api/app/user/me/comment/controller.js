@@ -148,7 +148,7 @@ async function HandleMention(anonymous_name, post_id, user_id) {
 
         const { mentionee, endpoint, p256dh, auth} = result.rows[0];
         //else send notification to mentioned users
-        if(!canSendPush(mentionee)) return;
+        if(!(await canSendPush(mentionee))) return;
 
         await webpush.sendNotification(
             {
