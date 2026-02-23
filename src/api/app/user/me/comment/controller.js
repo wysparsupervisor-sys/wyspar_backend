@@ -128,7 +128,7 @@ async function canSendPush(user_id){
         await redisClient.expire(key, 24 * 60 * 60);
     };
 
-    return count <= 30;
+    return count <= 40;
 };
 
 
@@ -153,7 +153,7 @@ async function HandleMention(anonymous_name, post_id, user_id, comment, poster_i
 
         const url = `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`
         console.log(url);
-        
+
         await webpush.sendNotification(
             {
                 endpoint: endpoint,
