@@ -145,6 +145,7 @@ async function HandleMention(anonymous_name, post_id, user_id, comment, poster_i
                 LIMIT 1`
         , [anonymous_name, post_id, user_id, poster_id]);
 
+        console.log(result.rows);
         if(!result.rows[0]) return;
 
         const { mentionee, endpoint, p256dh, auth} = result.rows[0];
