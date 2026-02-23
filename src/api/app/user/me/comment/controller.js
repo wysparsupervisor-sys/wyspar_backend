@@ -151,8 +151,6 @@ async function HandleMention(anonymous_name, post_id, user_id, comment, poster_i
         //else send notification to mentioned users
         if(!(await canSendPush(mentionee))) return;
 
-        console.log("sending");
-
         await webpush.sendNotification(
             {
                 endpoint: endpoint,
@@ -166,11 +164,13 @@ async function HandleMention(anonymous_name, post_id, user_id, comment, poster_i
                 body: `${comment.slice(0,50)}...open app`,
                 icon: "https://www.wyspar.com/icon.png",
                 url: `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`,
-                actions: [{ action: "view", title: "View It" }],
+                image: "https://www.wyspar.com/push.png",
+                actions: [{ action: "view", title: "View" }, { action: "reply", title: "Reply" }],
             }),
         );
+
+        console.log("sent");
     } catch (err) {
         console.log(err);
-        return;
     };
 };
