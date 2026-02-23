@@ -52,20 +52,21 @@ const ProcessComment = async (req, res) => {
     try {
         const result = await pool.query(query_db, [comment, post_id, user_id]);
         res.status(200).json({ok: true, msg: "success", body: result.rows[0]});
-        
-        //tell mixpanle that someone commented
-        TrackEvent('Comment Created', {
-            distinct_id: user_id,
-            commented_on: post_id,
-            time: Date.now(),
-        });
 
 
         //handle push notification after response
         try {
             //fetch post owner
-            const post_res = await pool.query(`SELECT user_id FROM posts WHERE post_id = $1`, [post_id]);
-            const poster_id = post_res.rows[0].user_id
+            const post_res = await pool.query(`SELECT u.user_id, u.anonymous_name FROM posts p JOIN users u ON u.user_id = p.user_id WHERE p.post_id = $1`, [post_id]);
+            const poster_id = post_res.rows[0].user_id;
+
+            //tell mixpanle that someone commented
+            TrackEvent('Comment Created', {
+                distinct_id: user_id,
+                commented_on: post_res.rows[0].anonymous_name,
+                time: Date.now(),
+            });
+
             if(poster_id === user_id) return; //if poster posted the comment do nothing
 
             //handle mention if any
