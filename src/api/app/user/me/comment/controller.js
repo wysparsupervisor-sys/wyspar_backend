@@ -60,9 +60,6 @@ const ProcessComment = async (req, res) => {
             time: Date.now(),
         });
 
-        //handle mention if any
-        const mentionMatch = comment.match(/@\S+/);
-        if(mentionMatch) await HandleMention(mentionMatch[0].slice(1), post_id, user_id, comment);
 
         //handle push notification after response
         try {
@@ -70,6 +67,10 @@ const ProcessComment = async (req, res) => {
             const post_res = await pool.query(`SELECT user_id FROM posts WHERE post_id = $1`, [post_id]);
             const poster_id = post_res.rows[0].user_id
             if(poster_id === user_id) return; //if poster posted the comment do nothing
+
+            //handle mention if any
+            const mentionMatch = comment.match(/@\S+/);
+            if(mentionMatch) await HandleMention(mentionMatch[0].slice(1), post_id, user_id, comment, poster_id);
 
             //check if poster has reached the limit
             if(!(await canSendPush(poster_id))) return;
@@ -130,19 +131,18 @@ async function canSendPush(user_id){
 };
 
 
-async function HandleMention(anonymous_name, post_id, user_id, comment) {
+async function HandleMention(anonymous_name, post_id, user_id, comment, poster_id) {
     try {
         const result = await pool.query(
             `SELECT ps.endpoint, ps.p256dh, ps.auth, ps.user_id AS mentionee
             FROM users u
             JOIN comments c ON c.user_id = u.user_id AND c.post_id = $2
-            JOIN posts p ON p.post_id = c.post_id
             JOIN push_subscriptions ps ON ps.user_id = u.user_id
             WHERE LOWER(u.anonymous_name) = LOWER($1)
-                AND u.user_id != p.user_id
+                AND u.user_id != $4
                 AND u.user_id != $3
                 LIMIT 1`
-        , [anonymous_name, post_id, user_id]);
+        , [anonymous_name, post_id, user_id, poster_id]);
 
         if(!result.rows[0]) return;
 
