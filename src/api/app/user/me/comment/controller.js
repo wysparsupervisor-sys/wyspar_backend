@@ -145,12 +145,13 @@ async function HandleMention(anonymous_name, post_id, user_id, comment, poster_i
                 LIMIT 1`
         , [anonymous_name, post_id, user_id, poster_id]);
 
-        console.log(result.rows);
         if(!result.rows[0]) return;
 
         const { mentionee, endpoint, p256dh, auth} = result.rows[0];
         //else send notification to mentioned users
         if(!(await canSendPush(mentionee))) return;
+
+        console.log("sending");
 
         await webpush.sendNotification(
             {
