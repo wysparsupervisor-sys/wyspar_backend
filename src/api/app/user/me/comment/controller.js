@@ -71,7 +71,7 @@ const ProcessComment = async (req, res) => {
 
             //handle mention if any
             const mentionMatch = comment.match(/@\S+/);
-            if(mentionMatch) await HandleMention(mentionMatch[0].slice(1), post_id, user_id, comment, poster_id);
+            if(mentionMatch) HandleMention(mentionMatch[0].slice(1), post_id, user_id, comment, poster_id);
 
             //check if poster has reached the limit
             if(!(await canSendPush(poster_id))) return;
@@ -128,7 +128,7 @@ async function canSendPush(user_id){
         await redisClient.expire(key, 24 * 60 * 60);
     };
 
-    return count <= 24;
+    return count <= 30;
 };
 
 
@@ -164,12 +164,9 @@ async function HandleMention(anonymous_name, post_id, user_id, comment, poster_i
                 body: `${comment.slice(0,50)}...open app`,
                 icon: "https://www.wyspar.com/icon.png",
                 url: `https://www.wyspar.com/whisper/school/1/anonymous/hi/${UUIDToBase62(post_id)}`,
-                image: "https://www.wyspar.com/push.png",
                 actions: [{ action: "view", title: "View" }, { action: "reply", title: "Reply" }],
             }),
         );
-
-        console.log("sent");
     } catch (err) {
         console.log(err);
     };
