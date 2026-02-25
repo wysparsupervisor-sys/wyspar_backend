@@ -64,14 +64,16 @@ const ProcessFeed = async (req, res) => {
 module.exports = ProcessFeed;
 
 
-async function getCachedFeeds(feed_cat, post_category="*", school="*", count = 2){
+async function getCachedFeeds(feed_cat, post_category="*", school="*", count = 1){
     try {
         const key = `feed:${feed_cat}:${school === "*" ? schools[Math.floor(Math.random() * schools.length)].value:school}:${post_category === "*" ? Math.floor(Math.random() * POST_CATEGORIES.length):post_category}`;
- 
+        const key2 = `feed:${feed_cat}:${school === "*" ? schools[Math.floor(Math.random() * schools.length)].value:school}:${post_category === "*" ? Math.floor(Math.random() * POST_CATEGORIES.length):post_category}`;
+
         const items = await redisClient.zRandMemberCount(key, count);
+        const item2 = await redisClient.zRandMemberCount(key2, count);
 
         if(!items) return []; 
-        return items;
+        return [...items, ...item2];
     } catch (err) {
         console.log(err);
         return [];
