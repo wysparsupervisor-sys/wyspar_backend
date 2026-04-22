@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { Pool } = require("pg");
+const fs = require("fs");
 const isProduction = process.env.NODE_ENV === "production";
 
 //set up databse config
@@ -9,6 +10,7 @@ const pool = new Pool({
         isProduction && {
             ssl: {
                 rejectUnauthorized: true,
+                ca: fs.readFileSync("/home/ubuntu/certs/pg_ca.pem").toString(),
             }
         }
     )

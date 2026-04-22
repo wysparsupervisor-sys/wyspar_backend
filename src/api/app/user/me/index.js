@@ -3,6 +3,7 @@ const router = require("express").Router();
 router.use("/get", require("./get/router"));
 router.use("/edit", require("./edit/router"));
 router.use("/post", require("./post/router"));
+router.use("/connect", require("./connect/router"));
 router.use("/interaction", require("./interaction/router"));
 router.use("/comment", require("./comment/router"));
 router.use("/delete", require("./delete/router"));

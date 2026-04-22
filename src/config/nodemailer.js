@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 
 
 const MailTransporter = nodemailer.createTransport({
-    host: "smtp.mailgun.org",
+    host: "smtp-pulse.com",
     secure: false,
     port: 587,
     auth: {

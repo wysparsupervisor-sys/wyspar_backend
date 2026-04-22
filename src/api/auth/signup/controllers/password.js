@@ -60,6 +60,9 @@ const ProcessPassword = async (req, res) => {
         await client.query(post_query, [result.rows[0].user_id, auto_content, auto_post_type, auto_post_style, auto_post_category, auto_location_status, auto_vector]);
         await client.query(increment_query, [result.rows[0].user_id]);
 
+        //create personality tablee
+        await client.query(`INSERT INTO personalities (user_id) VALUES ($1)`, [result.rows[0].user_id]);
+
         await client.query("COMMIT");
         
         //issue access token

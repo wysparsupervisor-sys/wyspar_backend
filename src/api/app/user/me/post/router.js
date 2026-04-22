@@ -13,7 +13,7 @@ router.post("/", async (req, res) => {
 
     //check if user is subdcribed
     const is_subscribed = req.subscription.is_subscribed;
-    if (!is_subscribed) return res.status(200).json({ok: false, cause:"notsub"})
+    if (!is_subscribed) return res.status(200).json({ok: false, cause:"notsub"});
 
     //valiadate coordinates, category, & types at the route level cause it's used  across all
     await body("type").exists().isString().isIn(POST_TYPES).withMessage("").run(req);

@@ -4,16 +4,7 @@ const POST_CATEGORIES = require("../../../lib/data/post-categories");
 const schools = require("../../../lib/data/schools");
 
 const ProcessFeed = async (req, res) => {
-    const user_id = req.user.ID;
-    const is_subscribed = req.subscription.is_subscribed;
-    const redis_key = `USER:${user_id}:FREEFEED`;
-    if (!is_subscribed) {
-        const limited_feed = await redisClient.get(redis_key);
-        if (limited_feed) {
-            return res.status(200).json({ok: true, cause:"nosub", body: JSON.parse(limited_feed)});
-        };
-    };
-    
+      
     let { post_category } = req.query;
     const school = req.user.school;
     
@@ -48,11 +39,6 @@ const ProcessFeed = async (req, res) => {
         `;
 
         const result = await pool.query(db_query, [unique, req.user.ID]);
-        if (!is_subscribed) {
-            const limited_feed = JSON.stringify(result.rows);
-            await redisClient.set(redis_key, limited_feed, { EX: 60 * 60 * 24 * 2 });
-            return res.status(200).json({ok: true, cause:"nosub", body: result.rows});
-        };
         return res.status(200).json({ok: true, body: result.rows});
     } catch (err) {
         console.log(err);
