@@ -5,7 +5,7 @@ const { TrackEvent } = require("../../../../../config/mixpanel");
 
 
 const ProcessConnect = async (req, res) => {
-    await body("purpose").exists().isString().isLength({max: 60, min: 5}).run(req);
+    await body("purpose").exists().isString().isLength({max: 100, min: 5}).run(req);
     await body("phone").exists().isString().matches(/^0[0-9]{10}$/).run(req);
     await body("location").optional().isString().isLength({max: 30}).run(req);
     await body("extra").optional().isString().isLength({max: 200}).run(req);
