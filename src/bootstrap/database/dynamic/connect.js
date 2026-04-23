@@ -11,7 +11,6 @@ const CreateConnectTable = async () => {
             extra TEXT,
             embedding VECTOR(384) NOT NULL,
             normalized_interest_sparse_vector VECTOR(50) NOT NULL,
-            main_interest_index INT NOT NULL,
             is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );

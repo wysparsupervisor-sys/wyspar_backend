@@ -30,9 +30,9 @@ const ProcessConnect = async (req, res) => {
         //use embedding to find 3 top best centroids in DB and from that get user matches
         const { rows: top3 } = await pool.query(`
             SELECT centroid_id, 1 - (centroid_vector <=>  $1) AS score FROM centroids WHERE (1 - (centroid_vector <=> $1)) > 0  ORDER BY centroid_vector <=> $1 LIMIT 3
-        `, [bg_suitable_vector_input]);  //top3  is a deceiving  name as it was meant to be named that initially
+        `, [bg_suitable_vector_input]);  
 
-        //contruct a 300 dimensional sparse vector and get net freq
+        //contruct a 50 dimensional sparse vector and get net freq
         const connect_interest_sparse_vector = new Array(50).fill(0);
         let connect_interest_net_freq = 0;
         top3.forEach(obj => {
@@ -43,7 +43,7 @@ const ProcessConnect = async (req, res) => {
         });
 
         //create a normalized sum sparse vector
-        const normalized_connect_interest_sparse_vector = connect_interest_sparse_vector.map(v => v / connect_interest_net_freq);
+        const normalized_connect_interest_sparse_vector = connect_interest_sparse_vector.map(v => v / (connect_interest_net_freq || 1));
         const bg_suitable_normalized_connect_interest_sparse_vector = '[' + normalized_connect_interest_sparse_vector.join(",") + ']';
  
         //send connect to DB and respond with 200 to user

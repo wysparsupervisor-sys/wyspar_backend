@@ -7,7 +7,7 @@ async function ADDPersona (){
         await pool.query(`INSERT INTO personalities (user_id) VALUES ($1)`, [user.user_id])
     }
     console.log("done")
-    } catch (error) {
+    } catch (err) {
         console.log(err);
     }
 };
