@@ -42,18 +42,23 @@ const ProcessRecoveryEmail = async (req, res) => {
         SetCookie(res, "recovery_session_id", token, 15 * 60 * 1000);
         res.status(200).json({ok: true, msg: "successful"});
 
-        //send email to client
-        return MailTransporter.sendMail({
-            from: '"Wyspar Security" <app@wyspar.com>',
-            to: email,
-            subject: `${APP_NAME} noticed you forgot your password!`,
-            html: `
-                <div style="border: 3px solid #5a0019ff; background-color: black; color: white; padding: 1rem; border-radius: 2rem;">                    
-                    <h1 style="color: #0a6464ff;">${APP_NAME} 🎭</h1><br>
-                    <p style="line-height: 1.6;">You told us you forgot your password <b>${result.rows[0].anonymous_name}</b>! Use this code to set a new password <b>${otp}</b>. If this wasn't you ignore and do not share the code with anyone ever!</p><br>
-                </div>
-            `
-        });
+        try {
+            //send email to client
+            return await MailTransporter.sendMail({
+                from: '"Wyspar Security" <app@wyspar.com>',
+                to: email,
+                subject: `${APP_NAME} noticed you forgot your password!`,
+                html: `
+                    <div style="border: 3px solid #5a0019ff; background-color: black; color: white; padding: 1rem; border-radius: 2rem;">                    
+                        <h1 style="color: #0a6464ff;">${APP_NAME} 🎭</h1><br>
+                        <p style="line-height: 1.6;">You told us you forgot your password <b>${result.rows[0].anonymous_name}</b>! Use this code to set a new password <b>${otp}</b>. If this wasn't you ignore and do not share the code with anyone ever!</p><br>
+                    </div>
+                `
+            });
+        } catch (error) {
+            console.log(error);
+        };
+        
     } catch (err) {
         console.log(err);
         res.status(400).json({ok: false, msg: "An internal server error occurred. Try again!"});

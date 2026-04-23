@@ -51,20 +51,24 @@ const ProcessPersonalData =  async (req, res) => {
         const token = jwt.sign({ sessionID: sessionID }, keys.PRIVATE_KEY, { algorithm: "RS256", expiresIn: "30min" })
         SetCookie(res, "signup_session_id", token, 30 * 60 * 1000);
         res.status(200).json({ok: true, msg: "successful"});
-
-         //send email to user
-        return MailTransporter.sendMail({
-            from: '"Wyspar Team" <app@wyspar.com>',
-            to: signup_data.email,
-            subject: `Welcome to ${APP_NAME}!`,
-            html: `
-                <div style="border: 3px solid #5a0019ff; background-color: black; color: white; padding: 1rem; border-radius: 2rem;">                    
-                    <h1 style="color: #0a6464ff;">${APP_NAME} 🎭</h1><br>
-                    <p style="line-height: 1.6;">Hello 👋 <b style="color: white;">${signup_data.anonymous_name}</b>, thank you for aspiring to be a great member of our social community. A platform dedicated to promoting free speech and fun across the campus community.</p><br>
-                    <p style="line-height: 1.6;">To proceed your code is <b>${signup_data.otp}</b>. Make sure to not share this number with anybody else. Thank you for complying!</p><br>
-                </div>
-            `
-        });
+        
+        try {
+            //send email to user
+            return await MailTransporter.sendMail({
+                from: '"Wyspar Team" <app@wyspar.com>',
+                to: signup_data.email,
+                subject: `Welcome to ${APP_NAME}!`,
+                html: `
+                    <div style="border: 3px solid #5a0019ff; background-color: black; color: white; padding: 1rem; border-radius: 2rem;">                    
+                        <h1 style="color: #0a6464ff;">${APP_NAME} 🎭</h1><br>
+                        <p style="line-height: 1.6;">Hello 👋 <b style="color: white;">${signup_data.anonymous_name}</b>, thank you for aspiring to be a great member of our social community. A platform dedicated to promoting free speech and fun across the campus community.</p><br>
+                        <p style="line-height: 1.6;">To proceed your code is <b>${signup_data.otp}</b>. Make sure to not share this number with anybody else. Thank you for complying!</p><br>
+                    </div>
+                `
+            });
+        } catch (error) {
+            console.log(error);
+        };
 
     } catch (err) {
         console.log(err);
