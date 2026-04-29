@@ -132,7 +132,7 @@ const ProcessConnect = async (req, res) => {
                             title: `A connect suggestion`,
                             body: `I'm looking for someone ${purpose}`,
                             icon: "https://www.wyspar.com/icon.png",
-                            url: `https://www.wyspar.com/connect/${UUIDToBase62(connect_id)}?(!)?${purpose}?(!)?${phone}?(!)?${location}?(!)?${extra.slice(0, 30)}`,
+                            url: `https://www.wyspar.com/connect/${UUIDToBase62(insert_res.rows[0].connect_id)}?(!)?${purpose}?(!)?${phone}?(!)?${location}?(!)?${extra.slice(0, 30)}`,
                             actions: [{ action: "view", title: "Connect" }],
                         }),
                     );
