@@ -1,7 +1,10 @@
 const { body, validationResult } = require("express-validator");
 const { embed } = require("../../../../../config/embedder");
 const pool = require("../../../../../config/pg");
+const webpush = require("web-push");
 const { TrackEvent } = require("../../../../../config/mixpanel");
+const { UUIDToBase62 } = require("../../../../../lib/utils/base-converter");
+const redisClient = require("../../../../../config/redis");
 
 
 const ProcessConnect = async (req, res) => {
@@ -59,60 +62,90 @@ const ProcessConnect = async (req, res) => {
         if (insert_res.rowCount === 0){ return res.status(200).json({ok: false, cause:"limit"}); };
         res.status(200).json({ok: true, msg: "success", returned: insert_res.rows[0]});
 
-        //register event in mixpanel
-        TrackEvent('Connect Created', {
-            distinct_id: user_id,
-            purpose,
-            time: Date.now(),
-        });
+        try {
+            //register event in mixpanel
+            TrackEvent('Connect Created', {
+                distinct_id: user_id,
+                purpose,
+                time: Date.now(),
+            });
 
 
-        //get user personality vector and net connect frequency
-        const user = (await pool.query(`
-            SELECT connect_personality, net_connect_frequency FROM personalities WHERE user_id = $1
-        `, [user_id])).rows[0];
- 
-        //name stuff & multply user persona_vector by net_connect_freq
-        const current_net_connect_freq = user.net_connect_frequency;
-        const current_connect_personality_vector = JSON.parse(user.connect_personality);
-        const current_connect_personality_vector_scaled = current_connect_personality_vector.map(x =>  x * current_net_connect_freq);
+            //get user personality vector and net connect frequency
+            const user = (await pool.query(`
+                SELECT connect_personality, net_connect_frequency FROM personalities WHERE user_id = $1
+            `, [user_id])).rows[0];
+    
+            //name stuff & multply user persona_vector by net_connect_freq
+            const current_net_connect_freq = user.net_connect_frequency;
+            const current_connect_personality_vector = JSON.parse(user.connect_personality);
+            const current_connect_personality_vector_scaled = current_connect_personality_vector.map(x =>  x * current_net_connect_freq);
 
-        //calculate new net_freq and new_scaled peronality vector
-        const new_net_connect_freq = current_net_connect_freq + connect_interest_net_freq;
-        const new_connect_personality_vector_scaled = connect_interest_sparse_vector.map((v, i) => v + current_connect_personality_vector_scaled[i]);
+            //calculate new net_freq and new_scaled peronality vector
+            const new_net_connect_freq = current_net_connect_freq + connect_interest_net_freq;
+            const new_connect_personality_vector_scaled = connect_interest_sparse_vector.map((v, i) => v + current_connect_personality_vector_scaled[i]);
 
-        //normalize sum of new scaled personality vector
-        const new_connect_personality_vector = new_connect_personality_vector_scaled.map(v => v / new_net_connect_freq);
-        const db_suitable_new_connect_personality_vector_input = '[' + new_connect_personality_vector.join(",") + ']';
+            //normalize sum of new scaled personality vector
+            const new_connect_personality_vector = new_connect_personality_vector_scaled.map(v => v / new_net_connect_freq);
+            const db_suitable_new_connect_personality_vector_input = '[' + new_connect_personality_vector.join(",") + ']';
 
-        //save new personality vector to DB and new_freq
-        await pool.query(
-            `UPDATE personalities SET net_connect_frequency = $1, connect_personality = $2 WHERE user_id = $3`,
-            [new_net_connect_freq, db_suitable_new_connect_personality_vector_input, user_id]
-        );
- 
-        return
-        //fetch top 20 users having the best match
-        const result = await pool.query(
-            `
-                WITH top_users AS (
-                    SELECT p.user_id FROM personalities p
-                    JOIN users u ON u.user_id = p.user_id
-                    WHERE u.school = $2
-                        AND u.deleted = FALSE
-                        AND u.user_id = $3
-                    ORDER BY (p.connect_personality <#> $1) * -1 DESC LIMIT 20
-                )
-                SELECT ups.endpoint, ups.p256dh, ups.auth
-                FROM top_users t
-                JOIN push_subscriptions ups ON ups.user_id = t.user_id
-            `,
-            [bg_suitable_normalized_connect_interest_sparse_vector, school, user_id]
-        );
+            //save new personality vector to DB and new_freq
+            await pool.query(
+                `UPDATE personalities SET net_connect_frequency = $1, connect_personality = $2 WHERE user_id = $3`,
+                [new_net_connect_freq, db_suitable_new_connect_personality_vector_input, user_id]
+            );
+    
+            //fetch top 20 users having the best match
+            const result = await pool.query(
+                `
+                    WITH top_users AS (
+                        SELECT p.user_id FROM personalities p
+                        JOIN users u ON u.user_id = p.user_id
+                        WHERE u.school = $2
+                            AND u.deleted = FALSE
+                            AND u.user_id = $3
+                        ORDER BY (p.connect_personality <#> $1) * -1 DESC LIMIT 15
+                    )
+                    SELECT ups.endpoint, ups.p256dh, ups.auth, ups.user_id
+                    FROM top_users t
+                    JOIN push_subscriptions ups ON ups.user_id = t.user_id                    
+                `,
+                [bg_suitable_normalized_connect_interest_sparse_vector, school, user_id]
+            );
 
+            //broadcast notifications to 10 to 20 best candidates
+            if (result.rows.length === 0) return;
 
-        //broadcast notifications to 10 to 20 best candidates
+            for (let i = 0; i < result.rows.length; i++) {
+                const row = result.rows[i];
+                
+                try {
+                    if(canSendPush(row.user_id)) await webpush.sendNotification(
+                        {
+                            endpoint: row.endpoint,
+                            keys: {
+                                p256dh: row.p256dh,
+                                auth: row.auth,
+                            },
+                        },
+                        JSON.stringify({
+                            title: `A connect suggestion`,
+                            body: `I'm looking for someone ${purpose}`,
+                            icon: "https://www.wyspar.com/icon.png",
+                            url: `https://www.wyspar.com/connect/${UUIDToBase62(connect_id)}?(!)?${purpose}?(!)?${phone}?(!)?${location}?(!)?${extra.slice(0, 30)}`,
+                            actions: [{ action: "view", title: "Connect" }],
+                        }),
+                    );
+                } catch (err) {
+                    console.log(err)
+                    console.error("Push error, removing subscription", row.endpoint);
+                    return await pool.query(`DELETE FROM push_subscriptions WHERE endpoint = $1`, [row.endpoint]);                
+                };
+            };
         
+        } catch (error) {
+            console.log(err);
+        };
 
     } catch (err) {
         console.log(err);
@@ -122,3 +155,16 @@ const ProcessConnect = async (req, res) => {
 
 
 module.exports = ProcessConnect;
+
+
+async function canSendPush(user_id){
+    const key = `USER:${user_id}:CONNECT_PUSH_LIMIT`;
+    const count = await redisClient.incr(key);
+
+    if (count === 1) {
+        //fisrt notificatiion
+        await redisClient.expire(key, 2 * 60 * 60);
+    };
+
+    return count <= 3;
+};
