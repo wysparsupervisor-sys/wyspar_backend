@@ -103,7 +103,7 @@ const ProcessConnect = async (req, res) => {
                         JOIN users u ON u.user_id = p.user_id
                         WHERE u.school = $2
                             AND u.deleted = FALSE
-                            AND u.user_id = $3
+                            AND u.user_id != $3
                         ORDER BY (p.connect_personality <#> $1) * -1 DESC LIMIT 15
                     )
                     SELECT ups.endpoint, ups.p256dh, ups.auth, ups.user_id
