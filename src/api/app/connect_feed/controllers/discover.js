@@ -23,7 +23,8 @@ const GetDiscoveredConnects = async (req, res) => {
                             'extra', m.extra,
                             'created_at', m.created_at,
                             'gender', m.gender,
-                            'profile_background', m.profile_background   
+                            'profile_background', m.profile_background,
+                            'connect_description', m.connect_description
                         )
                     )
                     FROM (
