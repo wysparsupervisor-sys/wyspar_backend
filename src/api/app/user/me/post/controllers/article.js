@@ -37,7 +37,7 @@ module.exports = ProcessArticlePost;
 async function HandleArticleWithoutImage(req, res){
     const user_id = req.user.ID;
     const location_status = req.user.location_status;
-    const { text, type, category } = req.body;
+    const { text, type } = req.body;
 
     //prepare a client cause operation must be atomic
     const client = await pool.connect();
@@ -52,7 +52,7 @@ async function HandleArticleWithoutImage(req, res){
         const name_query = `SELECT anonymous_name FROM users WHERE user_id = $1`;
 
         await client.query("BEGIN");
-        const result = await client.query(post_query, [user_id, text, POST_TYPES.indexOf(type), POST_CATEGORIES.indexOf(category), LOCATION_CLASSES.indexOf(location_status), '['+ post_vector.join(',') + ']']);
+        const result = await client.query(post_query, [user_id, text, POST_TYPES.indexOf(type), 1, LOCATION_CLASSES.indexOf(location_status), '['+ post_vector.join(',') + ']']);
         await client.query(increment_query, [user_id]);
         const name_res = await client.query(name_query, [user_id])
         await client.query("COMMIT");
@@ -108,7 +108,7 @@ async function HandleArticleWithImage(req, res) {
     if (action === "post-article") {
         const user_id = req.user.ID;
         const location_status = req.user.location_status;
-        const { text, type, category } = req.body;
+        const { text, type } = req.body;
 
 
         //S3 logic
@@ -141,7 +141,7 @@ async function HandleArticleWithImage(req, res) {
             const name_query = `SELECT anonymous_name FROM users WHERE user_id = $1`;
 
             await client.query("BEGIN");
-            const result = await client.query(post_query, [user_id, text, POST_TYPES.indexOf(type), POST_CATEGORIES.indexOf(category), LOCATION_CLASSES.indexOf(location_status), imageKeysArray, '['+ post_vector.join(',') + ']']);
+            const result = await client.query(post_query, [user_id, text, POST_TYPES.indexOf(type), 1, LOCATION_CLASSES.indexOf(location_status), imageKeysArray, '['+ post_vector.join(',') + ']']);
             await client.query(increment_query, [user_id]);
             const name_res = await client.query(name_query, [user_id])
             await client.query("COMMIT");

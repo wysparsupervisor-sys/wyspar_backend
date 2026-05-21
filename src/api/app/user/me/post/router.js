@@ -15,9 +15,8 @@ router.post("/", async (req, res) => {
     const is_subscribed = req.subscription.is_subscribed;
     if (!is_subscribed) return res.status(200).json({ok: false, cause:"notsub"});
 
-    //valiadate coordinates, category, & types at the route level cause it's used  across all
+    //valiadate coordinates & types at the route level cause it's used  across all
     await body("type").exists().isString().isIn(POST_TYPES).withMessage("").run(req);
-    await body("category").exists().isString().isIn(POST_CATEGORIES).withMessage("").run(req);
     if(req.body.coords) {
         await body("coords.lat").exists().withMessage("").run(req);
         await body("coords.long").exists().withMessage("").run(req);

@@ -14,7 +14,7 @@ const GetPostComments = async (req, res) => {
     
     const { lastCreatedAt } = req.query;
     const BASE_SELECT = `
-        SELECT c.comment, c.created_at, c.comment_id, u.anonymous_name, u.school, u.details->'avatar' AS avatar FROM comments c 
+        SELECT c.comment, c.created_at, c.comment_id, u.anonymous_name, u.school, u.details->'avatar' AS avatar, u.details->'profile_photo' AS profile_photo FROM comments c 
         JOIN users u ON u.user_id = c.user_id
         WHERE c.post_id = $1
         AND u.deleted = FALSE

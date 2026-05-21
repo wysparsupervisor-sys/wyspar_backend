@@ -17,12 +17,12 @@ const ProcessStatementPost = async (req, res) => {
 
     const user_id = req.user.ID;
     const location_status = req.user.location_status;
-    const { text, type, category, style } = req.body;
-
+    const { text, type, style } = req.body;
+    const school = req.user.school;
 
     //prepare a client cause operation must be atomic
     const client = await pool.connect();
-        
+
     try {
         //extract embedding from xenova
         const post_vector = await embed(text);
@@ -33,7 +33,7 @@ const ProcessStatementPost = async (req, res) => {
         const name_query = `SELECT anonymous_name FROM users WHERE user_id = $1`;
 
         await client.query("BEGIN");
-        const result = await client.query(post_query, [user_id, text, POST_TYPES.indexOf(type), POST_STYLES.indexOf(style), POST_CATEGORIES.indexOf(category), LOCATION_CLASSES.indexOf(location_status), '['+ post_vector.join(',') + ']']);
+        const result = await client.query(post_query, [user_id, text, POST_TYPES.indexOf(type), POST_STYLES.indexOf(style), 1, LOCATION_CLASSES.indexOf(location_status), '['+ post_vector.join(',') + ']']);
         await client.query(increment_query, [user_id]);
         const name_res = await client.query(name_query, [user_id]);
         await client.query("COMMIT");
