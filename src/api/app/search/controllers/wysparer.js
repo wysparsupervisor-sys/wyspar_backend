@@ -13,7 +13,7 @@ const ProcessWysparerSearch = async (req, res) => {
     const last_dist_score = req.query.lastItemRankProp || null;
     
     const db_query = `
-        SELECT anonymous_name, stats->'posts' AS posts, school, details->'avatar' AS avatar, gender, anonymous_name <-> $1 AS dist_score FROM users
+        SELECT anonymous_name, stats->'posts' AS posts, school, details->'avatar' AS avatar, details->'profile_photo' AS profile_photo, gender, anonymous_name <-> $1 AS dist_score FROM users
         WHERE (anonymous_name % $1 OR anonymous_name ILIKE '%' || $1 || '%')
             AND school = $2
             AND ($3::float IS NULL OR anonymous_name <-> $1 > ($3::float + 1e-7))
